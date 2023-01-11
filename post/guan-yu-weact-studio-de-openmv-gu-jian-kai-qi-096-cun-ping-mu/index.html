@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="写在前面的
+WeAct 的 H750 核心板因其亲民的价格和强悍的性能而备受欢迎，不过后来看到反客科技的感觉好像更香，言归正题，但是开发板的出厂的 demo 程序不提供，导致刷了 OpenMV 固件后，屏幕就成了摆设，秉承着花一分钱就得体验..." />
+    <meta name="keywords" content="开发日常" />
+    <link rel="stylesheet" href="https://xinchen.github.io/media/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://xinchen.github.io/styles/main.css">
+    <!-- 代码渲染风格css -->
+    
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.1/build/styles/default.min.css">
+    
+    <!-- 代码高亮插件 -->
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.1/build/highlight.min.js"></script>
+    <!-- 代码复制插件 -->
+    <script src="https://cdn.jsdelivr.net/gh/850552586/ericamcdn@0.1/js/clipboard.min.js"></script>
+    <!-- live2d插件 -->
+    <link rel="stylesheet" href="https://xinchen.github.io/media/css/live2d.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.13.1/css/all.min.css" rel="stylesheet">
+    <!-- 数学公式 -->
+    
+    <title>关于WeAct Studio的OpenMV固件开启0.96寸屏幕！</title>
+
+    <!-- 大纲索引css调整 -->
+    
+    <style>
+        .markdownIt-TOC {
+            margin-left: 28%;
+            padding-left: 2px;
+            width: 80%;
+        }
+
+        .markdownIt-TOC li {
+            padding-left: 8%;
+        }
+    </style>
+    
+</head>
+
+<body>
+    <div id="landlord">
+        <div class="message" style="opacity:0"></div>
+        <canvas id="live2d" width="240" height="250" class="live2d"></canvas>
+    </div>
+    <div id="domainname" style="display:none">https://xinchen.github.io</div>
+    <div id="content">
+        <div>
+            <!----------- 移动端导航栏👇 ----------------->
+            <div id="bar">
+                <style>
+  .navmobile {
+    z-index: 15;
+    max-height: 40vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+  }
+
+  @media screen and (max-width: 1200px) {
+    .navbar {
+      max-width: 100vw;
+    }
+  }
+
+  @media screen and (max-width:1200px) and (min-width: 768px) {
+    @media (min-width: 768px) {
+      .navbar-nav {
+        float: right;
+        margin: 0;
+      }
+    }
+  }
+
+  @media screen and (max-width:768px) {
+    .mbapspan {
+      padding: 0;
+    }
+  }
+</style>
+<div class="pjaxloading"  onclick="pjaxloadingClose()">
+  <div class="loadingbackground"></div>
+  <div id="loading">
+    <div class="loading">
+    </div>
+  </div>
+</div>
+<nav class="navbar navbar-inverse navbar-fixed-top navmobile">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#barmenu"
+        aria-expanded="false" id="barbutton">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a data-pjax class="navbar-brand" style="color:white" href="https://xinchen.github.io">xinchenの博客&nbsp;&nbsp;|</a>
+      <span class="navbar-brand mbapspan"><i id="mbaplayer" class="fa fa-play-circle-o" aria-hidden="true"
+          style="font-size: 28px;top: 12px;position: absolute;" onclick="aplayerPlay();"></i></span>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="barmenu">
+      <ul class="nav navbar-nav">
+        
+        
+        <li>
+          <a data-pjax href="/" style="color:white">
+            首页
+          </a>
+        </li>
+        
+        
+        
+        <li>
+          <a data-pjax href="/archives" style="color:white">
+            归档
+          </a>
+        </li>
+        
+        
+        
+        <li>
+          <a data-pjax href="/tags" style="color:white">
+            标签
+          </a>
+        </li>
+        
+        
+        
+        <li>
+          <a data-pjax href="/post/about" style="color:white">
+            关于
+          </a>
+        </li>
+        
+        
+        
+        
+          
+        <li><a data-pjax href="https://xinchen.github.io/friends" style="color:white">友链</a></li>
+
+        
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
+
+
+  <!-- 引入jQuery核心js文件 -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+  <script>
+    let btstate = false;
+    var bt = $("#barbutton");
+    var bm = $("#barmenu");
+    bt.click(function () {
+      dropdown();
+    })
+    function dropdown() {
+      console.log(btstate);
+      //下拉
+      if (btstate == false) {
+        bt.removeClass("collapsed");
+        bt.attr("aria-expanded", "true");
+        bm.attr("aria-expanded", "true")
+        bm.fadeIn(700);
+        btstate = true;
+      }
+      else {
+        bt.addClass("collapsed");
+        bt.attr("aria-expanded", "false");
+        bm.removeClass("in");
+        bm.hide();
+        bm.attr("aria-expanded", "false");
+        btstate = false;
+      }
+    }
+  </script> 
+            </div>
+            <!----------- 移动端导航栏👆 ----------------->
+
+            <!--------------- pc端菜单栏👇 ---------------->
+            <div class="side"><head>
+    <link rel="stylesheet" href="https://xinchen.github.io/media/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://xinchen.github.io/styles/main.css">
+    
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.1/build/styles/default.min.css">
+    
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.1/build/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/850552586/ericamcdn@0.1/js/clipboard.min.js"></script>
+    <link rel="stylesheet" href="https://xinchen.github.io/media/css/live2d.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.13.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <!-- fancybox -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+    <!--------- 数学公式👇---- -->
+    
+    <!--------- 数学公式👆----------------- -->
+    <!--------- daovocie功能👇 ------------------->
+    
+    <!--------- daovocie功能👆 ------------------->
+    <!-- -----------------twikoo评论系统引入👇 --------->
+    <script src="https://cdn.jsdelivr.net/npm/twikoo@1.3.1/dist/twikoo.all.min.js"></script>
+    <!-- -----------------twikoo评论系统引入👆 --------->
+    <!---------------- leancloud api 功能依赖引入👇 -------->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@3.13.0/dist/av-min.js"></script>
+    <!---------------- leancloud api 功能依赖引入👆 -------->
+    <!------------------ valine评论系统引入👇 ------------------>
+    <script src="https://xinchen.github.io/media/js/valine.min.js"></script>
+    <!------------------ valine评论系统引入👆 ------------------>
+    <!---------------- 今日诗词api功能依赖👇 ----------------------->
+    <script src="https://sdk.jinrishici.com/v2/browser/jinrishici.js" charset="utf-8"></script>
+    <!---------------- 今日诗词api功能依赖👆 ----------------------->
+    <!---------------- 今日诗词api功能依赖👇 ----------------------->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ispeak-bber/ispeak-bber.min.js" charset="utf-8"></script>
+    <!---------------- 哔哔功能依赖👆 ----------------------->
+
+
+</head>
+
+<style>
+    body {
+        overflow-x: hidden;
+        height: 100vh;
+        overflow-y: scroll;
+        cursor: url("https://xinchen.github.io/media/images/mouse_cursor.png"), auto
+    }
+</style>
+
+<body>
+    <!--=------ 页面加载动态画面👇 --------------->
+    <div class="pjaxloading" onclick="pjaxloadingClose()">
+        <div class="loadingbackground"></div>
+        <div id="loading-aname">
+            <div class="loading-aname">
+            </div>
+        </div>
+    </div>
+    <!--=------ 页面加载动态画面👆 --------------->
+
+    <!--------------- 左侧菜单栏👇 ------------------------>
+    
+    <div id=side>
+        <div class="r_m_div">
+            <a onclick="showAaplayer()"><i style="font-size: 20px;"><img
+                        src='https://xinchen.github.io/media/images/music.png' alt="音乐播放器" class="musicbtn"></i></a>
+        </div>
+        <div class="avatar-border">
+            <img src="https://xinchen.github.io/images/avatar.png?v=1673440169193" class="avatar">
+        </div>
+        <div class="sitename">xinchenの博客</div>
+        <span class="description" data-text='["分享开发过程中的点点滴滴"]'>&nbsp;</span>
+        <div class="siteinfocontainer">
+            <span class="siteinfo">文章</span>
+            <span class="siteinfo">标签</span>
+        </div>
+        <div class="siteinfocontainer">
+            <span class="siteinfo" id="siteinfo-postsnum"></span>
+            <span class="siteinfo">3</span>
+        </div>
+        
+        <div class="search">
+            <!-- <input type="text" class="search-input" placeholder="标题搜索(●'◡'●)" /> -->
+            <input type="text" class="search-input" placeholder="标题搜索 ⚆_⚆ つ♡">
+            <div class="search-results"></div>
+        </div>
+        
+    <div class="share-button">
+        <span></span>
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    <div id="qq" style="display:none"></div>
+    <!------------ 加载菜单按钮👇 ------------------------->
+    <div class="menucontainer">
+        
+        
+        <div class="mchocie description">
+            <a data-pjax href="/" class="menubutton" style="margin-right: 15px;">
+                <i><img class="icon menuicon" src="" alt="首页"></i>&nbsp;<span
+                    data-text="首页">首页</span>
+            </a>
+        </div>
+        
+        
+        
+        <div class="mchocie description">
+            <a data-pjax href="/archives" class="menubutton" style="margin-right: 15px;">
+                <i><img class="icon menuicon" src="" alt="归档"></i>&nbsp;<span
+                    data-text="归档">归档</span>
+            </a>
+        </div>
+        
+        
+        
+        <div class="mchocie description">
+            <a data-pjax href="/tags" class="menubutton" style="margin-right: 15px;">
+                <i><img class="icon menuicon" src="" alt="标签"></i>&nbsp;<span
+                    data-text="标签">标签</span>
+            </a>
+        </div>
+        
+        
+        
+        <div class="mchocie description">
+            <a data-pjax href="/post/about" class="menubutton" style="margin-right: 15px;">
+                <i><img class="icon menuicon" src="" alt="关于"></i>&nbsp;<span
+                    data-text="关于">关于</span>
+            </a>
+        </div>
+        
+        
+
+        
+        
+        
+        <div class="mchocie description">
+            <a data-pjax href="https://xinchen.github.io/friends" class="menubutton" style="margin-right: 15px;">
+                <i><img class="icon menuicon" src="" alt="友人帐"></i>&nbsp;<span data-text="友人帐">友人帐</span>
+            </a>
+        </div>
+        
+        <!--  -->
+    </div>
+    <!------------ 加载菜单按钮👆 ------------------------->
+    <hr>
+    <style>
+    .copyright {
+        font-size: 15px;
+        color: #d9d9d9;
+    }
+
+
+    @media screen and (min-width: 1200px) {
+        .foot {
+            width: 100%;
+            height: 130px;
+        }
+    }
+
+    @media screen and (max-width: 1200px) {
+        .foot {
+            display: none;
+        }
+    }
+</style>
+
+<body>
+    <div class="foot">
+        <div id="footinfo">Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | Theme: <a
+                href="https://github.com/850552586/gridea-theme-fog">Fog</a>
+            <div>
+                
+            </div>
+            <div>
+                
+            </div>
+            <div class="copyright" style="color:white;text-align: center;">Copyright © 2020  备案号: 鄂ICP备...号
+            </div>
+        </div>
+
+
+
+    </div>
+</body>
+
+    </div>
+
+    <img class="moon" src="https://xinchen.github.io/media/images/moon.png" onclick="moonlight()">
+    <script src="https://xinchen.github.io/media/js/wordshow.js"></script>
+    
+    <!--------------- 左侧菜单栏👆 ------------------------>
+
+    <!----------------- 顶部菜单栏👇 ------------------------>
+    
+    <!----------------- 顶部菜单栏👆 ------------------------>
+
+<!--核心功能加载-->
+<script src="https://xinchen.github.io/media/js/mainfunc.js"></script>
+
+<!------------- Fog1.0版本彩蛋👇 -------------->
+    <!-- <section id="terrestrial" class="popup">
+        <a href="#" class="back">&lt; back</a>
+    </section>
+
+    <div class="flycontainer">
+        <div class="flyword">御风飞行中...</div>
+    </div>
+
+    <script>
+        $("#fog_go").click(function(){fog_go()});
+        async function fog_go(){
+            $(".bars").hide()
+            $("#live2d").hide()
+            await sleep(3000);
+            $(".flycontainer").css("display","flex");
+            $(".popup").fadeOut(500)
+            await sleep(2000);
+            var sitename = "xinchenの博客";
+            getFogUser(sitename);
+        }
+
+        function fog_goregis(){
+            var sitename = "xinchenの博客";
+            var siteurl = "https://xinchen.github.io";
+            regisFogUser(sitename,siteurl);
+        }
+        fog_goregis();
+    </script> -->
+<!------------- Fog1.0版本彩蛋👆 -------------->
+<script>
+    function change_topmenu(){
+        tmcolor = "antiquewhite"
+        tsnamecolor = "antiquewhite"
+        $(".navbar-inverse .navbar-nav>li>a").css("color",tmcolor)
+        $(".navbar-inverse .navbar-brand").css("color",tsnamecolor)
+        $(".navbar-fixed-top").css("border-radius","0 0 10px 10px")
+    }
+</script>
+
+<!------ 根据自定义配置声明变量👇 --------------------->
+    
+    <script>
+        var postnumChoice = false
+    </script>
+    
+    
+    <script>
+        var shareChoice = false
+    </script>
+    
+    
+    <script>
+        var donateChoice = false
+    </script>
+    
+    
+    <script>
+        var searchChoice = true
+    </script>
+    
+    <script>let postsnum = 0;</script>
+    <div id="side-posttitle" style="display: none;">
+    
+    
+    Markdown语法示例
+    <script>
+        postsnum += 1
+    </script>
+    
+    
+    
+    关于WeAct Studio的OpenMV固件开启0.96寸屏幕！
+    <script>
+        postsnum += 1
+    </script>
+    
+    
+    
+    关于旭日X3派的底板固件刷写
+    <script>
+        postsnum += 1
+    </script>
+    
+    
+    
+    
+    
+    Hello Gridea
+    <script>
+        postsnum += 1
+    </script>
+    
+    
+    </div>
+    
+        <script>
+            var menupos = 'left';
+            $("#siteinfo-postsnum").html(postsnum);
+        </script>
+    
+    <script>
+        let commentsHide = false
+    </script>
+    <!------ 根据自定义配置声明变量👆 --------------------->
+
+
+    <!----------根据自定义配置设置图标信息👇---------->
+    <script>
+        var icondict = new Array();
+    </script>
+    
+        
+    
+    <!----------根据自定义配置设置图标信息👆---------->
+</body>
+
+<script src="https://xinchen.github.io/media/share/dist/Share.js"></script>
+<!-- 页面pjax测试 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery.pjax/2.0.1/jquery.pjax.js"></script>
+<!--确保jQuery已经在此之前加载-->
+<!-- <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script> -->
+<script src="https://xinchen.github.io/media/js/all-pjax.js"></script>
+<script>
+    //-------------------------------说说功能👇--------------------------------------
+    let talksall = [];
+    let talks = [];
+    let talkindex = 0;
+    get();
+
+    function get() {
+        var t = JSON.parse('[]');
+        talkindex = t.length - 1;
+        for (var i = 0; i <= t.length - 1; i++) {
+            var d = {};
+            d["time"] = t[i].time;
+            d["author"] = t[i].author;
+            d["text"] = t[i].text;
+            d["img"] = t[i].img;
+            talksall.push(d);
+        }
+    }
+
+    function add() {
+        for (var i = talkindex; i >= 0 && i > talkindex - 3; i--) {
+            talks.push(talksall[i]);
+        }
+        talkindex = (talkindex - 3) >= 0 ? (talkindex - 3) : -1;
+        if (talkindex < 0) $("#getmorebt").hide();
+        show();
+    }
+
+    function show() {
+        var talkT = document.getElementById("talkContainer");
+        talkT.innerHTML = "";
+        for (var i = 0; i < talks.length; i++) {
+            if (talks[i].img != '') {
+                talkT.innerHTML += '\
+            <div class="talk" v-for="t in talks"> \
+                <span data-fancybox="images" href="' + talks[i].img + '"><img src="' + talks[i].img + '" class="talkimg"></span> \
+                <div class="ainfo">\
+                    <div class="ainfo-intro">\
+                        <div class="author">' + talks[i].author + '</div>·\
+                        <div class="time">' + talks[i].time + '</div>\
+                    </div>\
+                </div>\
+                <div class="talkcontent">' + talks[i].text + '\
+                </div\>\
+            ';
+            } else {
+                talkT.innerHTML += '\
+            <div class="talk" v-for="t in talks"> \
+                <div class="ainfo">\
+                    <div class="ainfo-intro">\
+                        <div class="author">' + talks[i].author + '</div>·\
+                        <div class="time">' + talks[i].time + '</div>\
+                    </div>\
+                </div>\
+                <div class="talkcontent">' + talks[i].text + '\
+                </div\>\
+            ';
+            }
+        }
+    }
+    //-------------------------------说说功能👆--------------------------------------
+</script>
+
+<!---->
+<script>
+    function replaceAvatar() {
+        twikoo_avatar = $(".tk-avatar-img");
+        for (var i = 0; i < twikoo_avatar.length; i++) {
+            var asrc = twikoo_avatar.eq(i).attr('src');
+            if (asrc.search('cn.gravatar.com') != -1) {
+                twikoo_avatar.eq(i).attr('src', 'https://xinchen.github.io/media/images/comavatar.png');
+            }
+        }
+    }
+
+    function showWechat() {
+        var wechat = '';
+        alert("博主微信号：" + wechat);
+        return false;
+    }
+</script>
+
+<script>
+    /**
+     * https://github.com/tangkaichuan/gridea-search
+     */
+    // 检查缓存是否最新
+    function checkCache() {
+        var caches_postsnum = localStorage.getItem("postsnum");
+        var pt = document.getElementById("side-posttitle").innerHTML;
+        pt = pt.replace(/\s+/g, '').replace(/<script>.*?<\/script>/gi, "")
+        var ptlen = pt.length;
+        var ptlen_storage = localStorage.getItem("poststitlelen");
+        if (caches_postsnum != postsnum || ptlen != ptlen_storage) {
+            console.log("更新缓存");
+            return false
+        }
+        return true;
+    }
+
+    (function () {
+        var CACHES = checkCache()
+        if (!CACHES) {
+            var NOW = Date.now()
+            var API_CONTENT = '../api-content/index.html' + '?_=' + NOW
+            preload(API_CONTENT);
+            getContents(show_getContentresult);
+        }
+
+        function show_getContentresult(data) {
+            console.log("获取成功");
+            var postslen = data["posts"].length;
+            localStorage.setItem('postsnum', postslen);
+            var poststitlelen = 0;
+            var pt = document.getElementById("side-posttitle").innerHTML;
+            pt = pt.replace(/\s+/g, '').replace(/<script>.*?<\/script>/gi, "");
+            localStorage.setItem('poststitlelen', pt.length);
+        }
+
+
+
+        // preload
+        function preload(url) {
+            var preloadLink = document.createElement('link')
+            preloadLink.href = url
+            preloadLink.rel = 'preload'
+            preloadLink.as = 'fetch'
+            preloadLink.crossOrigin = 'anonymous'
+            document.head.appendChild(preloadLink)
+        }
+
+        // 异步 GET 请求
+        function get(obj) {
+            var xhr = new XMLHttpRequest()
+            xhr.open('get', obj.url, true)
+            xhr.send(null)
+            xhr.onreadystatechange = function () {
+                // 异步请求：响应状态为4，数据加载完毕
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        obj.success(xhr.responseText)
+                    } else {
+                        obj.error(xhr.status)
+                    }
+                }
+            }
+        }
+
+        // 获取博客全文 api
+        function getContents(callback) {
+            if (CACHES) {
+                callback(CACHES.contents)
+            } else {
+                get({
+                    url: API_CONTENT,
+                    success: function (data) {
+                        callback(JSON.parse(data));
+                        localStorage.setItem('ContentsCache', data);
+                        getStorageContent();
+                    }
+                })
+            }
+        }
+    })()
+    //------------------------核心功能--pjax全局渲染👇-------------------
+    let talkinit = false;
+    $(document).pjax('a[data-pjax]', '#main', {
+        fragment: '#main',
+        timeout: 8000
+    }).on('pjax:complete', function () {
+        //代码块高亮渲染
+        document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightBlock(block);
+        });
+        //文章热度
+        if(postnumChoice){
+            getHotnum();
+        }
+        //文章索引
+        toginit();
+        //清空搜索栏
+        if (searchChoice) {
+            searchInit();
+            searchInput.value = "";
+        }
+        var pl = window.location.pathname;
+        //说说更新
+        if (pl.search("talk") != -1 && !talkinit) {
+            add();
+            talkinit = true;
+        } else if (pl.search("talk") != -1) {
+            show();
+        }
+        if (pl.search("post") != -1) {
+            if (shareChoice)
+                shareInit();
+            if (donateChoice)
+                donateInit();
+            if ("default" == "default"&&!commentsHide) {
+                $("#comment").hide()
+                commentsHide = true
+            }
+            lazyload();
+            codeinit();
+            if ("default" == "twikoo") {
+                //twikoo头像更换
+                setTimeout(replaceAvatar, 3000);
+                setTimeout(replaceAvatar, 8000); //部分博主站点速度加载过慢，再添加一个延迟
+            }
+        }
+        if (btstate == true)
+            dropdown();
+    }).on('pjax:start', function () {
+        $(".pjaxloading").fadeIn(50);
+    }).on('pjax:end', function () {
+        $(".pjaxloading").fadeOut(50);
+    });
+    //------------------------核心功能--pjax全局渲染👆-------------------
+
+    //-------------------------------------------------搜索
+    // 获取搜索框、搜索按钮、清空搜索、结果输出对应的元素
+    if (searchChoice) {
+        var searchInput = document.querySelector('.search-input');
+        var searchResults = document.querySelector('.search-results');
+    }
+    // 申明保存文章的标题、链接、内容的数组变量
+    var searchValue = '',
+        arrItems = [],
+        arrLinks = [],
+        arrTitles = [],
+        arrContents = [],
+        arrResults = [],
+        indexItem = [],
+        itemLength = 0;
+    var tmpDiv = document.createElement('div');
+    tmpDiv.className = 'result-item';
+
+
+    function getStorageContent() {
+        var data = localStorage.getItem('ContentsCache');
+        data = JSON.parse(data);
+        posts = data["posts"];
+        for (var i = 0; i < posts.length; i++) {
+            arrLinks[i] = posts[i].link;
+            arrTitles[i] = posts[i].title;
+            arrContents[i] = posts[i].content;
+            itemLength++;
+        }
+    }
+    if (checkCache())
+        getStorageContent();
+    // 输入框内容变化后就开始匹配，可以不用点按钮
+    // 经测试，onkeydown, onchange 等方法效果不太理想，
+    // 存在输入延迟等问题，最后发现触发 input 事件最理想，
+    // 并且可以处理中文输入法拼写的变化
+    searchInput.oninput = function () {
+        setTimeout(searchConfirm, 0);
+    }
+    searchInput.onfocus = function () {
+        searchResults.style.display = 'block';
+    }
+
+    function searchConfirm() {
+        if (searchInput.value == '') {
+            searchResults.style.display = 'none';
+        } else if (searchInput.value.search(/^\s+$/) >= 0) {
+            // 检测输入值全是空白的情况
+            searchInit();
+            var itemDiv = tmpDiv.cloneNode(true);
+            itemDiv.innerText = '请输入有效内容...';
+            searchResults.appendChild(itemDiv);
+        } else {
+            // 合法输入值的情况
+            searchInit();
+            searchValue = searchInput.value;
+            // 在标题、内容中查找
+            searchMatching(arrTitles, arrContents, searchValue);
+        }
+    }
+
+    // 每次搜索完成后的初始化
+    function searchInit() {
+        arrResults = [];
+        indexItem = [];
+        searchResults.innerHTML = '';
+        searchResults.style.display = 'block';
+    }
+
+    function searchMatching(arr1, arr2, input) {
+        // 忽略输入大小写
+        input = new RegExp(input, 'i');
+        var step = 10;
+        // 在所有文章标题、内容中匹配查询值
+        for (i = 0; i < itemLength; i++) {
+            var indexContent = arr2[i].search(input);
+            //标题匹配
+            if (arr1[i].search(input) != -1) {
+                indexItem.push(i); // 保存匹配值的索引
+                if (indexContent != -1) {
+                    startindex = (indexContent - step) >= 0 ? (indexContent - step) : 0;
+                    var searchcontent = arr2[i].slice(indexContent - step, indexContent + 5)
+                    arrResults.push("....." + searchcontent + ".....");
+                } else
+                    arrResults.push("");
+            }
+            //内容匹配
+            else if (indexContent != -1) {
+                indexItem.push(i); // 保存匹配值的索引
+
+                startindex = (indexContent - step) >= 0 ? (indexContent - step) : 0;
+                var searchcontent = arr2[i].slice(indexContent - step, indexContent + 5)
+                arrResults.push("....." + searchcontent + ".....");
+            }
+        }
+
+        // 输出总共匹配到的数目
+        var totalDiv = tmpDiv.cloneNode(true);
+        totalDiv.innerHTML = '<b>总匹配：' + indexItem.length + ' 项<hr></b>';
+        searchResults.appendChild(totalDiv);
+
+        // 未匹配到内容的情况
+        if (indexItem.length == 0) {
+            var itemDiv = tmpDiv.cloneNode(true);
+            itemDiv.innerText = '未匹配到内容...';
+            searchResults.appendChild(itemDiv);
+        }
+
+        // 将所有匹配内容进行组合
+        for (i = 0; i < arrResults.length; i++) {
+            var itemDiv = tmpDiv.cloneNode(true);
+            itemDiv.innerHTML = '<a data-pjax class="searchresults" href="' + arrLinks[indexItem[i]] + '"><b>[' +
+                arrTitles[indexItem[i]] +
+                ']</b><p>' + arrResults[i] + '</p></a><hr />';
+            searchResults.appendChild(itemDiv);
+        }
+    }
+</script>
+
+
+
+<!--------------------- 菜单栏图标加载功能👇 ----------------------->
+<script>
+var menulist = $(".menuicon");
+var menulength = menulist.length;
+for (var i = 0; i < menulength; i++) {
+    var altname = menulist.eq(i).attr("alt");
+    var iconurl = icondict[altname];
+    if (iconurl == undefined || iconurl == '')
+        continue;
+    if (iconurl == 'Home') {
+        menulist.eq(i).attr("src", "https://xinchen.github.io/media/images/Home.png");
+menulist.eq(i).show();
+} else if (iconurl == 'Archive') {
+menulist.eq(i).attr("src", "https://xinchen.github.io/media/images/Archive.png");
+menulist.eq(i).show();
+} else if (iconurl == 'Tag') {
+menulist.eq(i).attr("src", "https://xinchen.github.io/media/images/Tag.png");
+menulist.eq(i).show();
+} else if (iconurl == 'About') {
+menulist.eq(i).attr("src", "https://xinchen.github.io/media/images/About.png");
+menulist.eq(i).show();
+} else if (iconurl == 'Talk') {
+menulist.eq(i).attr("src", "https://xinchen.github.io/media/images/Talk.png");
+menulist.eq(i).show();
+} else if (iconurl == 'Friends') {
+menulist.eq(i).attr("src", "https://xinchen.github.io/media/images/Friends.png");
+menulist.eq(i).show();
+} else if (iconurl == 'Fly') {
+menulist.eq(i).attr("src", "https://xinchen.github.io/media/images/wind.png");
+menulist.eq(i).show();
+} else {
+menulist.eq(i).attr("src", iconurl);
+menulist.eq(i).show();
+}
+}
+</script>
+<!--------------------- 菜单栏图标加载功能👆 ----------------------->
+
+<script>
+    //--------------------bber-onetalk加载👇--------------------------------
+    function bberonetalkLoad(){
+        bberjsonurl = '';
+        if ( $("#bber-talk").length > 0 ) {
+        jsonUrl = bberjsonurl
+        $.getJSON(jsonUrl+"?t="+Date.parse( new Date()),function(res){
+        var bberHtml = ''
+        $.each(res.data, function(i, item){
+            d = new Date(item.date)
+            date = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate() +' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds()
+            dataTime = '<span class="datatime">'+date+'</span>'
+            bberHtml += '<li class="item item-'+(i+1)+'">'+dataTime+'： <a data-pjax href="https://xinchen.github.io/bber">'+item.content+'</a></li>'
+        });
+        $('#bber-talk').append('<span class="index-talk-icon"><svg viewBox="0 0 1024 1024" width="21" height="21"><path d="M184.32 891.667692c-12.603077 0-25.206154-2.363077-37.809231-7.876923-37.021538-14.966154-59.864615-49.624615-59.864615-89.009231v-275.692307c0-212.676923 173.292308-385.969231 385.969231-385.969231h78.76923c212.676923 0 385.969231 173.292308 385.969231 385.969231 0 169.353846-137.846154 307.2-307.2 307.2H289.083077l-37.021539 37.021538c-18.904615 18.116923-43.323077 28.356923-67.741538 28.356923zM472.615385 195.347692c-178.018462 0-322.953846 144.935385-322.953847 322.953846v275.692308c0 21.267692 15.753846 29.144615 20.48 31.507692 4.726154 2.363077 22.055385 7.876923 37.021539-7.08923l46.473846-46.473846c6.301538-6.301538 14.178462-9.452308 22.055385-9.452308h354.461538c134.695385 0 244.184615-109.489231 244.184616-244.184616 0-178.018462-144.935385-322.953846-322.953847-322.953846H472.615385z"></path><path d="M321.378462 512m-59.076924 0a59.076923 59.076923 0 1 0 118.153847 0 59.076923 59.076923 0 1 0-118.153847 0Z"></path><path d="M518.301538 512m-59.076923 0a59.076923 59.076923 0 1 0 118.153847 0 59.076923 59.076923 0 1 0-118.153847 0Z"></path><path d="M715.224615 512m-59.076923 0a59.076923 59.076923 0 1 0 118.153846 0 59.076923 59.076923 0 1 0-118.153846 0Z"></path></svg></span><ul class="talk-list">'+bberHtml+'</ul>')
+        //Lately({ 'target': '#bber-talk .datatime' });
+        });
+        function Roll (){
+        var list_li = $('.talk-list li'),cur_li = list_li.first(),last_li = list_li.last();
+        last_li.after(cur_li);
+        };
+        setInterval(Roll,3000);
+    }
+    }
+  //--------------------bber-onetalk加载👆--------------------------------
+</script>
+
+<script>
+    var ClicksideState = 1
+    var cur_readingmode = false
+    function readingmode(){
+        if (!cur_readingmode){
+            if(menupos == 'left'){
+                if(ClicksideState==1)
+                menu_openclose1()
+            }
+            $("#tab1").fadeOut(50)
+            $("#bg").fadeOut(50)
+            $(".navbar").fadeOut(50)
+            $(".markdownIt-TOC li a").css("color","black")
+            cur_readingmode = true
+        }else{
+            if(menupos == 'left'){
+                if(ClicksideState==0)
+                    menu_openclose1()
+            }
+            $("#tab1").fadeIn(50)
+            $("#bg").fadeIn(50)
+            $(".navbar").fadeIn(50)
+            $(".markdownIt-TOC li a").css("color","antiquewhite")
+            cur_readingmode = false  
+        }
+    }
+</script>
+
+
+<!----夜间模式👇-->
+<script>
+    var moonlightState = false
+    function moonlight(){
+        if(!moonlightState){
+            $("#bg").fadeOut(200)
+            $('body').css("background","rgba(0,0,0,0.8)")
+            $(".markdownIt-TOC li a").css("color","white")
+            $(".text p, .text ul").css("color","white")
+            $("#articlecontent").css("color","white")
+            $(".post-copyright").css("background","rgba(10,10,10,0.5)")
+            $('blockquote').css("background","rgba(10,10,10,0.6)")
+            $("#articlecontent").css("background","rgba(10,10,10,0.5)")
+            moonlightState = true
+            $(".moon").attr("src","https://xinchen.github.io/media/images/sun.png")
+        }else{
+            $("#bg").show()
+            $(".markdownIt-TOC li a").css("color","antiquewhite")
+            $(".text p, .text ul").css("color","rgba(0, 0, 0, 0.7)")
+            $("#articlecontent").css("color","black")
+            $(".post-copyright").css("background","#f9f9f9")
+            $('blockquote').css("background","#eff8f0")
+            $("#articlecontent").css("background","white")
+            $(".moon").attr("src","https://xinchen.github.io/media/images/moon.png")
+            $('body').css("background","white")
+            moonlightState = false
+        }
+    }
+</script>
+<!----夜间模式👆--></div>
+            <!--------------- pc端菜单栏👆 ---------------->
+
+            <!-- ----------------左侧菜单栏html 👇-------------------------------------->
+            
+            <div>
+                <div id="tab1" class="tab">
+                    <div class="bars">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="close"></div>
+                </div>
+                <div class="col-md-1 col-lg-3"></div>
+                <!-- main标签，pjax渲染时加载以下内容👇 -->
+                <div id="main" class="col-xs-12 col-sm-12 col-md-12 col-lg-7" style="padding:0;">
+                    <div class="readingmode" onclick="readingmode()">阅</div>
+                    <link rel="stylesheet" href="https://xinchen.github.io/media/css/font-awesome.css">
+
+<body>
+    <div class="allcontent" id="postdetail">
+        <div class="postshow postpadding" style="padding-bottom: 0;">
+            
+            <div class="postdetailimg">
+                <img src="https://xinchen.github.io/post-images/guan-yu-weact-studio-de-openmv-gu-jian-kai-qi-096-cun-ping-mu.jpg" class="postimage" style="cursor:auto">
+            </div>
+            <div class="postinfo-detail">
+                <div class="postdate"><i class="fa fa-calendar"></i>2023-01-09</div>
+                <div class="poststatus postdate"><i class="fa fa-clock-o"></i> 25 min read</div>
+                <div class="posttag">
+                    
+                    <a data-pjax href="https://xinchen.github.io/tag/HAlOAE7cQ/" class="postlink">
+                        <i class="fa fa-tag"></i> 开发日常
+                    </a>
+                    
+                </div>
+            </div>
+            
+        <div id="articlecontent">
+            <div id="texttitle" style="text-align: center">
+                <h2 id="ptitle">关于WeAct Studio的OpenMV固件开启0.96寸屏幕！</h2>
+                <!-- id 将作为查询条件 -->
+                <div id="pl" style="display:none">https://xinchen.github.io/post/guan-yu-weact-studio-de-openmv-gu-jian-kai-qi-096-cun-ping-mu/</div>
+                <div id="rootaddr" style="display:none">https://xinchen.github.io</div>
+                
+            </div>
+            <div class="text ">
+                <h1 id="写在前面的">写在前面的</h1>
+<p>WeAct 的 H750 核心板因其亲民的价格和强悍的性能而备受欢迎，不过后来看到反客科技的感觉好像更香，言归正题，但是开发板的出厂的 demo 程序不提供，导致刷了 OpenMV 固件后，屏幕就成了摆设，秉承着花一分钱就得体验到一分货的信念，便有了这篇博客。</p>
+<figure data-type="image" tabindex="1"><img src="https://xinchen.github.io/post-images/1673257060314.jpg" alt="" loading="lazy"></figure>
+<h1 id="准备工作">准备工作</h1>
+<p>WeAct Studio STM32H750 核心板</p>
+<p>屏幕的启动代码（st7735.py 文件）需要提前烧录到开发板</p>
+<pre><code>#Added 1.44 inch 128x128 and 0.96 inch 80x160 SST7735 to the
+# original 1.8 inch drivers developed by Guy Carver
+# fixed the issue of different start Row and start col addresses of different OLED types
+# fixed the RGB special equence in 80x160 ST7735B
+
+import machine
+import time
+from math import sqrt
+
+#TFTRotations and TFTRGB are bits to set
+# on MADCTL to control display rotation/color layout
+#Looking at display with pins on top.
+#00 = upper left printing right
+#10 = does nothing (MADCTL_ML)
+#20 = upper left printing down (backwards) (Vertical flip)
+#40 = upper right printing left (backwards) (X Flip)
+#80 = lower left printing right (backwards) (Y Flip)
+#04 = (MADCTL_MH)
+
+#60 = 90 right rotation
+#C0 = 180 right rotation
+#A0 = 270 right rotation
+TFTRotations = [0x00, 0x60, 0xC0, 0xA0]
+TFTBGR = 0x08 # for 1.8 and 1.44 inch display
+TFTRGB = 0x00
+
+#@micropython.native
+def clamp( aValue, aMin, aMax ) :
+  return max(aMin, min(aMax, aValue))
+
+#@micropython.native
+def TFTColor( aR, aG, aB ) :
+  '''Create a 16 bit rgb value from the given R,G,B from 0-255.
+     This assumes rgb 565 layout and will be incorrect for bgr.'''
+  return ((aR &amp; 0xF8) &lt;&lt; 8) | ((aG &amp; 0xFC) &lt;&lt; 3) | (aB &gt;&gt; 3)
+
+#ScreenSize = (128, 160)
+
+class TFT(object) :
+  &quot;&quot;&quot; define different model of ST7735, circuit board color or types (tabcolor).&quot;&quot;&quot;
+  GREENTAB        = 0x0 # 128x160 , start col 2, start row 1, rgb
+  REDTAB          = 0x1 # 128x160 , start col 0, start row 0, rgb
+  BLACKTAB        = 0x2 # 128x160 , start col 0, start row 0, bgr
+  GREENTAB2       = 0x3 # 128x160 , start col 2, start row 1, bgr
+  GREENTAB3       = 0x4 # 128x160 , start col 2, start row 3, rgb
+  GREENTAB128x128 = 0x5 # 128x128 1.44 inches, bgr, start col 2
+                              #         if rotation = 0, or 1, start row 1
+                              #         if rotation = 2, or 3, start row 3
+  GREENTAB80x160  = 0x6 # 80x160 0.96 inch, start col 26, start row 1, bgr, inverted
+  REDTAB80x160    = 0x7 # 80x160 0.96 inch, start col 24, start row 0, rgb
+  BLUETAB         = 0xB # 128x160 , start col 2, start row 1, rgb
+
+  NOP = 0x0
+  SWRESET = 0x01
+  RDDID = 0x04
+  RDDST = 0x09
+
+  SLPIN  = 0x10
+  SLPOUT  = 0x11
+  PTLON  = 0x12
+  NORON  = 0x13
+
+  INVOFF = 0x20
+  INVON = 0x21
+  DISPOFF = 0x28
+  DISPON = 0x29
+  CASET = 0x2A
+  RASET = 0x2B
+  RAMWR = 0x2C
+  RAMRD = 0x2E
+
+  COLMOD = 0x3A
+  MADCTL = 0x36
+
+  FRMCTR1 = 0xB1
+  FRMCTR2 = 0xB2
+  FRMCTR3 = 0xB3
+  INVCTR = 0xB4
+  DISSET5 = 0xB6
+
+  PWCTR1 = 0xC0
+  PWCTR2 = 0xC1
+  PWCTR3 = 0xC2
+  PWCTR4 = 0xC3
+  PWCTR5 = 0xC4
+  VMCTR1 = 0xC5
+
+  RDID1 = 0xDA
+  RDID2 = 0xDB
+  RDID3 = 0xDC
+  RDID4 = 0xDD
+
+  PWCTR6 = 0xFC
+
+  GMCTRP1 = 0xE0
+  GMCTRN1 = 0xE1
+
+  BLACK = 0
+  RED = TFTColor(0xFF, 0x00, 0x00)
+  MAROON = TFTColor(0x80, 0x00, 0x00)
+  GREEN = TFTColor(0x00, 0xFF, 0x00)
+  FOREST = TFTColor(0x00, 0x80, 0x80)
+  BLUE = TFTColor(0x00, 0x00, 0xFF)
+  NAVY = TFTColor(0x00, 0x00, 0x80)
+  CYAN = TFTColor(0x00, 0xFF, 0xFF)
+  YELLOW = TFTColor(0xFF, 0xFF, 0x00)
+  PURPLE = TFTColor(0xFF, 0x00, 0xFF)
+  WHITE = TFTColor(0xFF, 0xFF, 0xFF)
+  GRAY = TFTColor(0x80, 0x80, 0x80)
+
+  @staticmethod
+  def color( aR, aG, aB ) :
+    '''Create a 565 rgb TFTColor value'''
+    return TFTColor(aR, aG, aB)
+
+  def __init__( self, spi, aDC, aReset, aCS=None) :
+    &quot;&quot;&quot;aLoc SPI pin location is either 1 for 'X' or 2 for 'Y'.
+       aDC is the DC pin and aReset is the reset pin.&quot;&quot;&quot;
+    self.tabcolor = 0 # default
+    self._size = (128,160)
+    self._offset = (0, 0)
+    self.rotate = 0                    #Vertical with top toward pins.
+    self._rgb = True                   #color order of rgb.
+    self.dc  = machine.Pin(aDC, machine.Pin.OUT)
+    self.reset = machine.Pin(aReset, machine.Pin.OUT)
+    if aCS == None :
+        self.useCS = False
+    else :
+        self.useCS = True
+        self.csPin = machine.Pin(aCS, machine.Pin.OUT)
+    self.cs(1)
+    self.spi = spi
+    self.colorData = bytearray(2)
+    self.windowLocData = bytearray(4)
+
+
+  def cs (self, iologic) :
+      if self.useCS :
+          self.csPin(iologic)
+
+  def size( self ) :
+    return self._size
+
+  def offset ( self ) :
+    return self._offset
+
+#   @micropython.native
+  def on( self, aTF = True ) :
+    '''Turn display on or off.'''
+    self._writecommand(TFT.DISPON if aTF else TFT.DISPOFF)
+
+#   @micropython.native
+  def invertcolor( self, aBool ) :
+    '''Invert the color data IE: Black = White.'''
+    self._writecommand(TFT.INVON if aBool else TFT.INVOFF)
+
+#   @micropython.native
+  def rgb( self, aTF = True ) :
+    '''True = rgb else bgr'''
+    self._rgb = aTF
+    self._setMADCTL()
+
+#   @micropython.native
+  def rotation( self, aRot ) :
+    '''0 - 3. Starts vertical with top toward pins and rotates 90 deg
+       clockwise each step.'''
+    if (0 &lt;= aRot &lt; 4):
+      rotchange = self.rotate ^ aRot
+      self.rotate = aRot
+      # If switching from vertical to horizontal (indicated by bit 0 changing).
+      # swap screen size rows and columns and their start addresses offset
+
+    if (rotchange &amp; 1):
+      self._size =(self._size[1], self._size[0])
+      self._offset=(self._offset[1], self._offset[0])
+
+    if self.tabcolor == self.GREENTAB128x128 :
+      # special handling of 128x128 with different offsets during rotations
+      if aRot == 0 :
+        self._offset=(2,1)
+      elif aRot == 1 :
+        self._offset=(1,2)
+      elif aRot == 2 :
+        self._offset=(2,3)
+      elif aRot == 3 :
+        self._offset=(3,2)
+    self._setMADCTL()
+
+#  @micropython.native
+  def pixel( self, aPos, aColor ) :
+    '''Draw a pixel at the given position'''
+    if 0 &lt;= aPos[0] &lt; self._size[0] and 0 &lt;= aPos[1] &lt; self._size[1]:
+      self._setwindowpoint(aPos)
+      self._pushcolor(aColor)
+
+#   @micropython.native
+  def text( self, aPos, aString, aColor, aFont, aSize = 1, nowrap = False ) :
+    '''Draw a text at the given position.  If the string reaches the end of the
+       display it is wrapped to aPos[0] on the next line.  aSize may be an integer
+       which will size the font uniformly on w,h or a or any type that may be
+       indexed with [0] or [1].'''
+
+    if aFont == None:
+      return
+
+    #Make a size either from single value or 2 elements.
+    if (type(aSize) == int) or (type(aSize) == float):
+      wh = (aSize, aSize)
+    else:
+      wh = aSize
+
+    px, py = aPos
+    width = wh[0] * aFont[&quot;Width&quot;] + 1
+    for c in aString:
+      self.char((px, py), c, aColor, aFont, wh)
+      px += width
+      #We check &gt; rather than &gt;= to let the right (blank) edge of the
+      # character print off the right of the screen.
+      if px + width &gt; self._size[0]:
+        if nowrap:
+          break
+        else:
+          py += aFont[&quot;Height&quot;] * wh[1] + 1
+          px = aPos[0]
+
+#   @micropython.native
+  def char( self, aPos, aChar, aColor, aFont, aSizes ) :
+    '''Draw a character at the given position using the given font and color.
+       aSizes is a tuple with x, y as integer scales indicating the
+       # of pixels to draw for each pixel in the character.'''
+
+    if aFont == None:
+      return
+
+    startchar = aFont['Start']
+    endchar = aFont['End']
+
+    ci = ord(aChar)
+    if (startchar &lt;= ci &lt;= endchar):
+      fontw = aFont['Width']
+      fonth = aFont['Height']
+      ci = (ci - startchar) * fontw
+
+      charA = aFont[&quot;Data&quot;][ci:ci + fontw]
+      px = aPos[0]
+      if aSizes[0] &lt;= 1 and aSizes[1] &lt;= 1 :
+        for c in charA :
+          py = aPos[1]
+          for r in range(fonth) :
+            if c &amp; 0x01 :
+              self.pixel((px, py), aColor)
+            py += 1
+            c &gt;&gt;= 1
+          px += 1
+      else:
+        for c in charA :
+          py = aPos[1]
+          for r in range(fonth) :
+            if c &amp; 0x01 :
+              self.fillrect((px, py), aSizes, aColor)
+            py += aSizes[1]
+            c &gt;&gt;= 1
+          px += aSizes[0]
+
+#   @micropython.native
+  def line( self, aStart, aEnd, aColor ) :
+    '''Draws a line from aStart to aEnd in the given color.  Vertical or horizontal
+       lines are forwarded to vline and hline.'''
+    if aStart[0] == aEnd[0]:
+      #Make sure we use the smallest y.
+      pnt = aEnd if (aEnd[1] &lt; aStart[1]) else aStart
+      self.vline(pnt, abs(aEnd[1] - aStart[1]) + 1, aColor)
+    elif aStart[1] == aEnd[1]:
+      #Make sure we use the smallest x.
+      pnt = aEnd if aEnd[0] &lt; aStart[0] else aStart
+      self.hline(pnt, abs(aEnd[0] - aStart[0]) + 1, aColor)
+    else:
+      px, py = aStart
+      ex, ey = aEnd
+      dx = ex - px
+      dy = ey - py
+      inx = 1 if dx &gt; 0 else -1
+      iny = 1 if dy &gt; 0 else -1
+
+      dx = abs(dx)
+      dy = abs(dy)
+      if (dx &gt;= dy):
+        dy &lt;&lt;= 1
+        e = dy - dx
+        dx &lt;&lt;= 1
+        while (px != ex):
+          self.pixel((px, py), aColor)
+          if (e &gt;= 0):
+            py += iny
+            e -= dx
+          e += dy
+          px += inx
+      else:
+        dx &lt;&lt;= 1
+        e = dx - dy
+        dy &lt;&lt;= 1
+        while (py != ey):
+          self.pixel((px, py), aColor)
+          if (e &gt;= 0):
+            px += inx
+            e -= dy
+          e += dx
+          py += iny
+
+#   @micropython.native
+  def vline( self, aStart, aLen, aColor ) :
+    '''Draw a vertical line from aStart for aLen. aLen may be negative.'''
+    start = (clamp(aStart[0], 0, self._size[0]), clamp(aStart[1], 0, self._size[1]))
+    stop = (start[0], clamp(start[1] + aLen, 0, self._size[1]))
+    #Make sure smallest y 1st.
+    if (stop[1] &lt; start[1]):
+      start, stop = stop, start
+    self._setwindowloc(start, stop)
+    self._setColor(aColor)
+    self._draw(aLen)
+
+#   @micropython.native
+  def hline( self, aStart, aLen, aColor ) :
+    '''Draw a horizontal line from aStart for aLen. aLen may be negative.'''
+    start = (clamp(aStart[0], 0, self._size[0]), clamp(aStart[1], 0, self._size[1]))
+    stop = (clamp(start[0] + aLen, 0, self._size[0]), start[1])
+    #Make sure smallest x 1st.
+    if (stop[0] &lt; start[0]):
+      start, stop = stop, start
+    self._setwindowloc(start, stop)
+    self._setColor(aColor)
+    self._draw(aLen)
+
+#   @micropython.native
+  def rect( self, aStart, aSize, aColor ) :
+    '''Draw a hollow rectangle.  aStart is the smallest coordinate corner
+       and aSize is a tuple indicating width, height.'''
+    self.hline(aStart, aSize[0], aColor)
+    self.hline((aStart[0], aStart[1] + aSize[1] - 1), aSize[0], aColor)
+    self.vline(aStart, aSize[1], aColor)
+    self.vline((aStart[0] + aSize[0] - 1, aStart[1]), aSize[1], aColor)
+
+#   @micropython.native
+  def fillrect( self, aStart, aSize, aColor ) :
+    '''Draw a filled rectangle.  aStart is the smallest coordinate corner
+       and aSize is a tuple indicating width, height.'''
+    start = (clamp(aStart[0], 0, self._size[0]), clamp(aStart[1], 0, self._size[1]))
+    end = (clamp(start[0] + aSize[0] - 1, 0, self._size[0]), clamp(start[1] + aSize[1] - 1, 0, self._size[1]))
+
+    if (end[0] &lt; start[0]):
+      tmp = end[0]
+      end = (start[0], end[1])
+      start = (tmp, start[1])
+    if (end[1] &lt; start[1]):
+      tmp = end[1]
+      end = (end[0], start[1])
+      start = (start[0], tmp)
+
+    self._setwindowloc(start, end)
+    numPixels = (end[0] - start[0] + 1) * (end[1] - start[1] + 1)
+    self._setColor(aColor)
+    self._draw(numPixels)
+
+#   @micropython.native
+  def circle( self, aPos, aRadius, aColor ) :
+    '''Draw a hollow circle with the given radius and color with aPos as center.'''
+    self.colorData[0] = aColor &gt;&gt; 8
+    self.colorData[1] = aColor
+    xend = int(0.7071 * aRadius) + 1
+    rsq = aRadius * aRadius
+    for x in range(xend) :
+      y = int(sqrt(rsq - x * x))
+      xp = aPos[0] + x
+      yp = aPos[1] + y
+      xn = aPos[0] - x
+      yn = aPos[1] - y
+      xyp = aPos[0] + y
+      yxp = aPos[1] + x
+      xyn = aPos[0] - y
+      yxn = aPos[1] - x
+
+      self._setwindowpoint((xp, yp))
+      self._writedata(self.colorData)
+      self._setwindowpoint((xp, yn))
+      self._writedata(self.colorData)
+      self._setwindowpoint((xn, yp))
+      self._writedata(self.colorData)
+      self._setwindowpoint((xn, yn))
+      self._writedata(self.colorData)
+      self._setwindowpoint((xyp, yxp))
+      self._writedata(self.colorData)
+      self._setwindowpoint((xyp, yxn))
+      self._writedata(self.colorData)
+      self._setwindowpoint((xyn, yxp))
+      self._writedata(self.colorData)
+      self._setwindowpoint((xyn, yxn))
+      self._writedata(self.colorData)
+
+#   @micropython.native
+  def fillcircle( self, aPos, aRadius, aColor ) :
+    '''Draw a filled circle with given radius and color with aPos as center'''
+    rsq = aRadius * aRadius
+    for x in range(aRadius) :
+      y = int(sqrt(rsq - x * x))
+      y0 = aPos[1] - y
+      ey = y0 + y * 2
+      y0 = clamp(y0, 0, self._size[1])
+      ln = abs(ey - y0) + 1;
+
+      self.vline((aPos[0] + x, y0), ln, aColor)
+      self.vline((aPos[0] - x, y0), ln, aColor)
+
+  def fill( self, aColor = BLACK ) :
+    '''Fill screen with the given color.'''
+    self.fillrect((0, 0), self._size, aColor)
+
+  def image( self, x0, y0, x1, y1, data ) :
+    self._setwindowloc((x0, y0), (x1, y1))
+    self._writedata(data)
+
+#   @micropython.native
+  def _setColor( self, aColor ) :
+    self.colorData[0] = aColor &gt;&gt; 8
+    self.colorData[1] = aColor
+    self.buf = bytes(self.colorData) * 32
+
+#   @micropython.native
+  def _draw( self, aPixels ) :
+    '''Send given color to the device aPixels times.'''
+
+    self.dc(1)
+    self.cs(0)
+    for i in range(aPixels//32):
+      self.spi.write(self.buf)
+    rest = (int(aPixels) % 32)
+    if rest &gt; 0:
+        buf2 = bytes(self.colorData) * rest
+        self.spi.write(buf2)
+    self.cs(1)
+
+#   @micropython.native
+  def _setwindowpoint( self, aPos ) :
+    '''Set a single point for drawing a color to.'''
+    x = self._offset[0] + int(aPos[0])
+    y = self._offset[1] + int(aPos[1])
+    self._writecommand(TFT.CASET)            #Column address set.
+    self.windowLocData[0] = self._offset[0]
+    self.windowLocData[1] = x
+    self.windowLocData[2] = self._offset[0]
+    self.windowLocData[3] = x
+    self._writedata(self.windowLocData)
+
+    self._writecommand(TFT.RASET)            #Row address set.
+    self.windowLocData[0] = self._offset[1]
+    self.windowLocData[1] = y
+    self.windowLocData[2] = self._offset[1]
+    self.windowLocData[3] = y
+    self._writedata(self.windowLocData)
+    self._writecommand(TFT.RAMWR)            #Write to RAM.
+
+#   @micropython.native
+  def _setwindowloc( self, aPos0, aPos1 ) :
+    '''Set a rectangular area for drawing a color to.'''
+    self._writecommand(TFT.CASET)            #Column address set.
+    self.windowLocData[0] = self._offset[0]
+    self.windowLocData[1] = self._offset[0] + int(aPos0[0])
+    self.windowLocData[2] = self._offset[0]
+    self.windowLocData[3] = self._offset[0] + int(aPos1[0])
+    self._writedata(self.windowLocData)
+
+    self._writecommand(TFT.RASET)            #Row address set.
+    self.windowLocData[0] = self._offset[1]
+    self.windowLocData[1] = self._offset[1] + int(aPos0[1])
+    self.windowLocData[2] = self._offset[1]
+    self.windowLocData[3] = self._offset[1] + int(aPos1[1])
+    self._writedata(self.windowLocData)
+
+    self._writecommand(TFT.RAMWR)            #Write to RAM.
+
+  #@micropython.native
+  def _writecommand( self, aCommand ) :
+    '''Write given command to the device.'''
+    self.dc(0)
+    self.cs(0)
+    self.spi.write(bytearray([aCommand]))
+    self.cs(1)
+
+  #@micropython.native
+  def _writedata( self, aData ) :
+    '''Write given data to the device.  This may be
+       either a single int or a bytearray of values.'''
+    self.dc(1)
+    self.cs(0)
+    self.spi.write(aData)
+    self.cs(1)
+
+  #@micropython.native
+  def _pushcolor( self, aColor ) :
+    '''Push given color to the device.'''
+    self.colorData[0] = aColor &gt;&gt; 8
+    self.colorData[1] = aColor
+    self._writedata(self.colorData)
+
+  #@micropython.native
+  def _setMADCTL( self ) :
+    '''Set screen rotation and RGB/BGR format.'''
+    self._writecommand(TFT.MADCTL)
+    rgb = TFTRGB if self._rgb else TFTBGR
+    self._writedata(bytearray([TFTRotations[self.rotate] | rgb]))
+
+  #@micropython.native
+  def _reset( self ) :
+    '''Reset the device.'''
+    self.dc(0)
+    self.reset(1)
+    time.sleep(5)
+    self.reset(0)
+    time.sleep(5)
+    self.reset(1)
+    time.sleep(5)
+
+  def init_7735 ( self, Tabcolor) :
+    self.tabcolor = Tabcolor
+    if self.tabcolor == self.BLUETAB :
+        # Initialize blue tab version.
+        self._size = (128, 160)
+        self._offset = (2,1)
+        self._rgb = True
+
+        self._reset()
+        self._writecommand(TFT.SWRESET)              #Software reset.
+        time.sleep(5)
+        self._writecommand(TFT.SLPOUT)               #out of sleep mode.
+        time.sleep(120)
+
+        data1 = bytearray(1)
+        self._writecommand(TFT.COLMOD)               #Set color mode.
+        data1[0] = 0x05                             #16 bit color.
+        self._writedata(data1)
+        time.sleep(10)
+
+        data3 = bytearray([0x00, 0x06, 0x03])       #fastest refresh, 6 lines front, 3 lines back.
+        self._writecommand(TFT.FRMCTR1)              #Frame rate control.
+        self._writedata(data3)
+        time.sleep(10)
+
+        self._writecommand(TFT.MADCTL)
+        data1[0] = 0x08                             #row address/col address, bottom to top refresh
+        self._writedata(data1)
+
+        data2 = bytearray(2)
+        self._writecommand(TFT.DISSET5)              #Display settings
+        data2[0] = 0x15                             #1 clock cycle nonoverlap, 2 cycle gate rise, 3 cycle oscil, equalize
+        data2[1] = 0x02                             #fix on VTL
+        self._writedata(data2)
+
+        self._writecommand(TFT.INVCTR)               #Display inversion control
+        data1[0] = 0x00                             #Line inversion.
+        self._writedata(data1)
+
+        self._writecommand(TFT.PWCTR1)               #Power control
+        data2[0] = 0x02   #GVDD = 4.7V
+        data2[1] = 0x70   #1.0uA
+        self._writedata(data2)
+        time.sleep(10)
+
+        self._writecommand(TFT.PWCTR2)               #Power control
+        data1[0] = 0x05                             #VGH = 14.7V, VGL = -7.35V
+        self._writedata(data1)
+
+        self._writecommand(TFT.PWCTR3)           #Power control
+        data2[0] = 0x01   #Opamp current small
+        data2[1] = 0x02   #Boost frequency
+        self._writedata(data2)
+
+        self._writecommand(TFT.VMCTR1)               #Power control
+        data2[0] = 0x3C   #VCOMH = 4V
+        data2[1] = 0x38   #VCOML = -1.1V
+        self._writedata(data2)
+        time.sleep(1)
+
+        self._writecommand(TFT.PWCTR6)               #Power control
+        data2[0] = 0x11
+        data2[1] = 0x15
+        self._writedata(data2)
+
+        #These different values don't seem to make a difference.
+    #     dataGMCTRP = bytearray([0x0f, 0x1a, 0x0f, 0x18, 0x2f, 0x28, 0x20, 0x22, 0x1f,
+    #                             0x1b, 0x23, 0x37, 0x00, 0x07, 0x02, 0x10])
+        dataGMCTRP = bytearray([0x02, 0x1c, 0x07, 0x12, 0x37, 0x32, 0x29, 0x2d, 0x29,
+                                0x25, 0x2b, 0x39, 0x00, 0x01, 0x03, 0x10])
+        self._writecommand(TFT.GMCTRP1)
+        self._writedata(dataGMCTRP)
+
+    #     dataGMCTRN = bytearray([0x0f, 0x1b, 0x0f, 0x17, 0x33, 0x2c, 0x29, 0x2e, 0x30,
+    #                             0x30, 0x39, 0x3f, 0x00, 0x07, 0x03, 0x10])
+        dataGMCTRN = bytearray([0x03, 0x1d, 0x07, 0x06, 0x2e, 0x2c, 0x29, 0x2d, 0x2e,
+                                0x2e, 0x37, 0x3f, 0x00, 0x00, 0x02, 0x10])
+        self._writecommand(TFT.GMCTRN1)
+        self._writedata(dataGMCTRN)
+        time.sleep(1)
+
+        self._writecommand(TFT.CASET)                #Column address set.
+        self.windowLocData[0] = 0x00
+        self.windowLocData[1] = self._offset[0]                   #Start at column 2
+        self.windowLocData[2] = 0x00
+        self.windowLocData[3] = self._size[0] + self._offset[0]
+        self._writedata(self.windowLocData)
+
+        self._writecommand(TFT.RASET)                #Row address set.
+        self.windowLocData[1] = self._offset[1]                   #Start at row 1.
+        self.windowLocData[3] = self._size[1] + self._offset[1]
+        self._writedata(self.windowLocData)
+
+        self._writecommand(TFT.NORON)                #Normal display on.
+        time.sleep(1)
+
+        self._writecommand(TFT.RAMWR)
+        time.sleep(50)
+
+        self._writecommand(TFT.DISPON)
+        self.cs(1)
+        time.sleep(5)
+    else :
+        # Initialize a green tab version.
+        self._reset()
+        self._writecommand(TFT.SWRESET)              #Software reset.
+        time.sleep(120)
+        self._writecommand(TFT.SLPOUT)               #out of sleep mode.
+        time.sleep(255)
+
+        data3 = bytearray([0x01, 0x2C, 0x2D])       #fastest refresh, 6 lines front, 3 lines back.
+        self._writecommand(TFT.FRMCTR1)              #Frame rate control.
+        self._writedata(data3)
+
+        self._writecommand(TFT.FRMCTR2)              #Frame rate control.
+        self._writedata(data3)
+
+        data6 = bytearray([0x01, 0x2c, 0x2d, 0x01, 0x2c, 0x2d])
+        self._writecommand(TFT.FRMCTR3)              #Frame rate control.
+        self._writedata(data6)
+        time.sleep(10)
+
+        self._writecommand(TFT.INVCTR)               #Display inversion control
+        self._writedata(bytearray([0x07]))
+        self._writecommand(TFT.PWCTR1)               #Power control
+        data3[0] = 0xA2
+        data3[1] = 0x02
+        data3[2] = 0x84
+        self._writedata(data3)
+
+        self._writecommand(TFT.PWCTR2)               #Power control
+        self._writedata(bytearray([0xC5]))
+
+        data2 = bytearray(2)
+        self._writecommand(TFT.PWCTR3)               #Power control
+        data2[0] = 0x0A   #Opamp current small
+        data2[1] = 0x00   #Boost frequency
+        self._writedata(data2)
+
+        self._writecommand(TFT.PWCTR4)               #Power control
+        data2[0] = 0x8A   #Opamp current small
+        data2[1] = 0x2A   #Boost frequency
+        self._writedata(data2)
+
+        self._writecommand(TFT.PWCTR5)               #Power control
+        data2[0] = 0x8A   #Opamp current small
+        data2[1] = 0xEE   #Boost frequency
+        self._writedata(data2)
+
+        self._writecommand(TFT.VMCTR1)               #Power control
+        self._writedata(bytearray([0x0E]))
+
+        self._writecommand(TFT.INVOFF)
+
+        if self.tabcolor == self.GREENTAB :
+            self._offset = (2,1)
+        if self.tabcolor == self.REDTAB :
+            self._offset = (0,0)
+        if self.tabcolor == self.BLACKTAB :
+            self._offset = (0,0)
+            self._rgb = False
+        elif self.tabcolor == self.GREENTAB2 :
+            self._offset = (2,1)
+            self._rgb = False
+        elif self.tabcolor == self.GREENTAB3 :
+            self._offset = (2,3)
+        elif self.tabcolor == self.GREENTAB128x128 :
+            self._size = (128,128)
+            self._offset = (2,1)
+            self._rgb = False
+        elif self.tabcolor == self.GREENTAB80x160 :
+            self._size = (80,160)
+            self._offset = (26,1)
+            self._rgb = False
+            self._writecommand(TFT.INVON)
+        elif self.tabcolor == self.REDTAB80x160 :
+            self._size = (80,160)
+            self._offset = (24,0)
+
+        # rotate to the same orientation with the Pins on the boards at the top
+        if self.tabcolor == self.GREENTAB80x160 or self.tabcolor == self.REDTAB80x160 :
+            self.rotation(1)
+        else :
+            self.rotation(2)
+
+        # set the color mapping of  RGB or GBR
+        self._setMADCTL()
+
+        self._writecommand(TFT.COLMOD)
+        self._writedata(bytearray([0x05]))
+
+        self._writecommand(TFT.CASET)                #Column address set.
+
+        self.windowLocData[0] = 0x00
+        self.windowLocData[1] = self._offset[0]
+        self.windowLocData[2] = 0x00
+        self.windowLocData[3] = self._size[0]+self._offset[0]
+        self._writedata(self.windowLocData)
+
+        self._writecommand(TFT.RASET)                #Row address set.
+        self.windowLocData[1] = self._offset[1]
+        self.windowLocData[3] = self._size[1]+self._offset[1]
+        self._writedata(self.windowLocData)
+
+        dataGMCTRP = bytearray([0x02, 0x1c, 0x07, 0x12, 0x37, 0x32, 0x29, 0x2d, 0x29,
+                                0x25, 0x2b, 0x39, 0x00, 0x01, 0x03, 0x10])
+        self._writecommand(TFT.GMCTRP1)
+        self._writedata(dataGMCTRP)
+
+        dataGMCTRN = bytearray([0x03, 0x1d, 0x07, 0x06, 0x2e, 0x2c, 0x29, 0x2d, 0x2e,
+                                0x2e, 0x37, 0x3f, 0x00, 0x00, 0x02, 0x10])
+        self._writecommand(TFT.GMCTRN1)
+        self._writedata(dataGMCTRN)
+
+        self._writecommand(TFT.NORON)                #Normal display on.
+        time.sleep(10)
+
+        self._writecommand(TFT.DISPON)
+        time.sleep(100)
+
+        self.cs(1)
+</code></pre>
+<p>OpenMV IDE 代码</p>
+<pre><code># WeAct Studio
+# 微行工作室
+# TFT ST7735 Test
+
+import sensor, image, time
+from ST7735 import TFT,TFTColor
+from sysfont import sysfont
+from machine import Pin, SPI
+import pyb,time
+
+spi = SPI(-1, baudrate=20000000, polarity=0, phase=0, sck=Pin('E12'), mosi=Pin('E14'), miso=Pin('A0'))
+# DC       - RS/DC data/command flag
+# CS       - Chip Select, enable communication
+# RST/RES  - Reset
+dc  = Pin('E13', Pin.OUT, Pin.PULL_NONE)
+cs  = Pin('E11', Pin.OUT, Pin.PULL_NONE)
+rst = Pin('E15', Pin.OUT, Pin.PULL_NONE)
+
+lcd_led = Pin('E10', Pin.OUT, Pin.PULL_NONE)
+lcd_led.value(1)
+Lcd_LEDCount=0
+LCD_LEDSet=0
+def LCD_LEDCtrl(timer):
+    global Lcd_LEDCount,LCD_LEDSet
+    Lcd_LEDCount=Lcd_LEDCount+1
+    if Lcd_LEDCount == 10:
+        Lcd_LEDCount=0
+    if LCD_LEDSet &gt; Lcd_LEDCount: lcd_led.value(0)
+    else: lcd_led.value(1)
+
+lcd_led_tim = pyb.Timer(2)
+lcd_led_tim.init(freq=4000) # Freq: 4KHz
+lcd_led_tim.callback(LCD_LEDCtrl)
+
+def LCD_ShowBmp(_tft,FileName):
+    f=open(FileName, 'rb')
+    print(FileName)
+    if f.read(2) == b'BM':  #header
+        dummy = f.read(8) #file size(4), creator bytes(4)
+        offset = int.from_bytes(f.read(4), 'little')
+        hdrsize = int.from_bytes(f.read(4), 'little')
+        width = int.from_bytes(f.read(4), 'little')
+        height = int.from_bytes(f.read(4), 'little')
+        if int.from_bytes(f.read(2), 'little') == 1: #planes must be 1
+            depth = int.from_bytes(f.read(2), 'little')
+            if depth == 24 and int.from_bytes(f.read(4), 'little') == 0:#compress method == uncompressed
+                print(&quot;Image size:&quot;, width, &quot;x&quot;, height)
+                rowsize = (width * 3 + 3) &amp; ~3
+                if height &lt; 0:
+                    height = -height
+                    flip = False
+                else:
+                    flip = True
+                w, h = width, height
+                if w &gt; 160: w = 60
+                if h &gt; 80: h = 80
+                tft._setwindowloc((0,0),(w - 1,h - 1))
+                for row in range(h):
+                    if flip:
+                        pos = offset + (height - 1 - row) * rowsize
+                    else:
+                        pos = offset + row * rowsize
+                    if f.tell() != pos:
+                        dummy = f.seek(pos)
+                    for col in range(w):
+                        bgr = f.read(3)
+                        _tft._pushcolor(TFTColor(bgr[2],bgr[1],bgr[0]))
+            else:
+                print(FileName+'is not 24bit pic')
+
+tft=TFT(spi,dc,rst,cs)
+tft.init_7735(TFT.GREENTAB80x160)
+tft.rotation(3)
+LCD_ShowBmp(tft,'WeActStudiologo.bmp')
+time.sleep(50)
+LCD_LEDSet=1
+time.sleep(1000)
+tft.fill(TFT.BLACK)
+tft.text((0, 30), 'Hello WeAct!', TFT.WHITE, sysfont, 2, nowrap=False)
+
+sensor.reset()                      # Reset and initialize the sensor.
+sensor.set_pixformat(sensor.RGB565) # Set pixel format to RGB565 (or GRAYSCALE)
+sensor.set_framesize(sensor.QVGA)   # Set frame size to QVGA (320x240)
+
+if sensor.get_id() == sensor.OV7725:
+    sensor.set_hmirror(True)
+    sensor.set_vflip(True)
+
+sensor.skip_frames(time = 1000)     # Wait for settings take effect.
+clock = time.clock()                # Create a clock object to track the FPS.
+
+while(True):
+
+    clock.tick()                    # Update the FPS clock.
+    img = sensor.snapshot()         # Take a picture and return the image.
+    print(clock.fps())              # Note: OpenMV Cam runs about half as fast when connected
+                                    # to the IDE. The FPS should increase once disconnected.
+    tft.image(0,0,160-1,80-1,img.copy([80,80,160,80]))
+</code></pre>
+<h1 id="效果展示">效果展示</h1>
+<p>把 ST7735 驱动烧录后，启动 OpenMV IDE 连接开发板，运行代码<br>
+<img src="https://xinchen.github.io/post-images/1673257093984.jpg" alt="" loading="lazy"><br>
+<img src="https://xinchen.github.io/post-images/1673257103680.jpg" alt="" loading="lazy"></p>
+
+            </div>
+            <hr style="width: 80%;">
+            
+            <div class="postfooter">
+                <ul class="post-copyright">
+                    <li><strong>文章作者：</strong></li>
+            <li><strong>原文链接：</strong>https://xinchen.github.io/post/guan-yu-weact-studio-de-openmv-gu-jian-kai-qi-096-cun-ping-mu/</li>
+            <li><strong>版权声明：</strong>本博客所有文章除特别声明外，均采用<i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA
+                许可协议。转载请注明出处！</li>
+            </ul>
+        </div>
+        
+        <div id="otherpost">
+            
+            <a  data-pjax class="prev-post-pc" href="https://xinchen.github.io/post/ce-shi/"  style="color: black;">
+                <div id="ppcontainer">
+                    
+                    <img src="https://pic1.zhimg.com/v2-e80c8023fd727e099f5846faf5435eac_1440w.jpg?source=172ae18b" style="width: 100%;" class="opimg">
+                    
+                    <h4 class="optitle">Markdown语法示例</h4>
+                </div>
+            </a>
+            <div class="prev-post">
+                上一篇 <a  data-pjax href="https://xinchen.github.io/post/ce-shi/">Markdown语法示例</a>
+            </div>
+            
+            
+            <a data-pjax class="next-post-pc" href="https://xinchen.github.io/post/guan-yu-xu-ri-x3-pai-de-di-ban-gu-jian-shua-xie/"  style="color: black;">
+                <div id="npcontainer">
+                    
+                    <img src="https://xinchen.github.io/post-images/guan-yu-xu-ri-x3-pai-de-di-ban-gu-jian-shua-xie.jpg" style="width: 100%;" class="opimg">
+                    
+                    <h4 class="optitle">关于旭日X3派的底板固件刷写</h4>
+                </div>
+            </a>
+            <div class="next-post">
+                下一篇 <a  data-pjax href="https://xinchen.github.io/post/guan-yu-xu-ri-x3-pai-de-di-ban-gu-jian-shua-xie/">关于旭日X3派的底板固件刷写</a>
+            </div>
+            
+        </div>
+    </div>
+    </div>
+    </div>
+    <!-- 弹窗 -->
+    <div id="myModal" class="modal">
+        <img class="modal-content" id="img01">
+    </div>
+</body>
+<script>
+    //文章阅读热度
+    var pl = $("#pl").html();
+    var rootaddr = $("#rootaddr").html();
+    pl = pl.replace(rootaddr, "");
+    $("#hotnum").attr('id', pl);
+</script>
+                    <div class="toc-container">
+                        <ul class="markdownIt-TOC">
+<li><a href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2%E7%9A%84">写在前面的</a></li>
+<li><a href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C">准备工作</a></li>
+<li><a href="#%E6%95%88%E6%9E%9C%E5%B1%95%E7%A4%BA">效果展示</a></li>
+</ul>
+
+                    </div>
+                    <div class="tog">
+                        <div class="toggleContainer">
+                            <div class="toggle">
+                                <i class="fas fa-angle-double-up"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <!---------------------------- 评论系统👇 ------------------------->
+                    <div id="comment" class="comment">
+                        <div class="commentcontainer">
+                            
+                                
+                            
+                        </div>
+                    </div>
+                    <!---------------------------- 评论系统👆 ------------------------->
+                </div>
+                <!-- main标签，pjax渲染时加载以上内容👆 -->
+                <div class="col-md-1 col-lg-2"></div>
+                <div id="bg">
+                </div>
+            </div>
+            <!-- ----------------左侧菜单栏html 👆-------------------------------------->
+            
+        </div>
+        <!-- aplayer播放器加载👇 -->
+            
+        <!-- aplayer播放器加载👆 -->
+    </div>
+    <!-- 背景图加载方式👇 -->
+    <div id="bgchoice" style="display: none">default
+                </div>
+                
+                <div id="bgurl" style="display:none">\media\images\custom-bgimage.jpg</div>
+                
+    <!-- 背景图加载方式👆 -->
+</body>
+
+<script>
+    //初始化
+    //更换twikoo头像
+    setTimeout(replaceAvatar,1000);
+    setTimeout(replaceAvatar,2000);
+    setTimeout(replaceAvatar,8000);
+    // --------为每张图片添加懒加载（lazyload）标签-->懒加载功能 👇------------
+    lazyload();
+    //为文章内所有代码块添加代码复制功能 👇
+    codeinit();
+    // ------代码高亮显示功能-------------
+    hljs.initHighlightingOnLoad();
+    if (shareChoice)
+        shareInit();
+    if (donateChoice)
+        donateInit();
+</script>
+
+<!------------------ 加载live2d模型功能（看板娘）👇 ---------------->
+
+<script type="text/javascript">
+    var message_Path = '/live2d/'
+    var home_Path = document.getElementById("domainname").innerHTML + "/"; //此处修改为你的域名，必须带斜杠
+</script>
+<script type="text/javascript" src="https://xinchen.github.io/media/js/live2d.js"></script>
+<script type="text/javascript" src="https://xinchen.github.io/media/live2d/js/message.js"></script>
+<script type="text/javascript">
+    loadlive2d("live2d", "https://xinchen.github.io/media/live2d/assets/tororo.model.json");
+</script>
+
+<!------------------ 加载live2d模型功能（看板娘）👆 ---------------->
+
+
+<!----------------------- 返回顶部按钮功能👇 --------------------->
+<script>
+    $(function () {
+        $('.toggleContainer').click(function () {
+            $('html,body').animate({
+                scrollTop: '0px'
+            }, 800);
+        });
+        $(window).scroll(function () {
+            var st = $(window).scrollTop();
+            if (st > 30) {
+                $(".toggleContainer").fadeIn(400);
+            } else {
+                $(".toggleContainer").fadeOut(100);
+            }
+        });
+    });
+</script>
+<!----------------------- 返回顶部按钮功能👆 --------------------->
+
+
+<!------------ 加载全局背景图功能👇（开始时没有写好，这功能有点鸡肋/(ㄒoㄒ)/~~） -->
+<script>
+    var bgchoice = "default"
+    var bg = $('#bg');
+    var bgurl = document.getElementById("bgurl").innerHTML;
+    if (bgchoice == 'default')
+    {
+        for (var i = 0; i < 3; i++)
+            bgurl = bgurl.replace("\\", "/");
+        bgurl = "https://xinchen.github.io/" + bgurl;
+    }
+    bg.css("background", "url('" + bgurl + "')");
+
+    window.onload = function () {
+        aplayerbtnInit();
+    }
+</script>
+<!------------ 加载全局背景图功能👆（开始时没有写好，这功能有点鸡肋/(ㄒoㄒ)/~~） -->
+
+
+
+
+<script src="https://xinchen.github.io/media/js/index.js"></script>
+
+
+<script>
+    //加载后的事件同步（阅读量、移动端评论等
+    window.onload = function () {
+    //代码块高亮渲染
+    document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightBlock(block);
+    });
+        getHotnum();
+        var sharepc = $(".share").eq(0).html();
+        $(".share").eq(1).html(sharepc);   //插件只会寻找一个分享标签渲染，所以需要手动添加到移动端
+        aplayerbtnInit();
+        $(".hljs").css({
+            "padding": "20px"
+        })
+    }
+</script>
+
+<!-- <script src="https://xinchen.github.io/media/js/av-min.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@3.13.0/dist/av-min.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.6.1/dist/av-live-query-min.js"></script> -->
